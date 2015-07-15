@@ -1,7 +1,12 @@
 doctype html
-html
-  head
-    title= title
-    link(rel='stylesheet', href='/stylesheets/style.css')
-  body
-    block content
+html(ng-app='pgApp')
+	head
+	title = title
+	link(rel='stylesheet', href='/stylesheets/style.css')
+	script(src='/javascripts/jquery.min.js')
+	script(src='//ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular.min.js')
+	script(src='/javascripts/bootstrap.min.js')
+	script(src='/javascripts/main.js')
+	
+	body
+	block content

@@ -3,3 +3,13 @@ extends layout
 block content
   h1= title
   p Welcome to #{title}
+  
+  div(ng-controller="pgController")
+     input#inputSearch(type="text", placeholder="Products or Stores", ng-model="searchTerm"
+            title="Enter product or store names")
+     button.btn(ng-click="search()" title="click to search") Search
+  
+     div#divResults
+        div(ng-repeat="item in results").
+           {{item.name}} 
+  

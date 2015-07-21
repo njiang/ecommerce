@@ -104,7 +104,28 @@ app.directive('myPostRepeatDirective', function() {
   
 app.controller("pgController", function($scope, $rootScope, $sce, $http, $window, $location, DataService) {
 	$scope.results = null;
+	$scope.userId = "1";
 	$scope.cart = DataService.cart;
+	$scope.user = null;
+	
+	$scope.loadUserData = function() {
+		var url = "/user/" + $scope.userId;
+		var response = $http.get(url);
+		response.success(function(user) {
+			$scope.user = user;
+			if (user && user.products)
+				user.products.forEach(function(p) {
+					p.selected = true;
+				});
+		});
+		response.error(function() {
+			
+		});
+	};
+	$scope.$watch("userId", function(oldvalue, newvalue) {
+		$scope.loadUserData();
+	});
+	
 	
 	$scope.searchProducts = function() {
 		var keywords = $("#inputSearch").val();

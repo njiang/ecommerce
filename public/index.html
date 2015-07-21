@@ -43,7 +43,7 @@
                     </a>
                     PickGo Store 
                 </h1>
-				
+				<div>User: <input type="text" ng-model="userId"></div><br>
 				<div>
 					<a href="/#/cart" title="go to shopping cart" ng-disabled="cart.getTotalCount() < 1">
 					<i class="icon-shopping-cart" />
@@ -54,8 +54,14 @@
 					<input id="inputSearch" type="text" placeholder="Products or Stores" ng-model="searchTerm"
 							title="Enter product or store names" />
 					<button ng-click="searchProducts()" title="click to search">Search</button>
+				</div><br>
+				<h3>Saved Products</h3>
+				<div>
+					<div ng-repeat="p in user.products">
+						<p><input type="checkbox" ng-model="p.selected">&nbsp;{{p.item.name}}&nbsp;<input type="text" ng-model="p.quantity"></p>
+					</div>
+					<button ng-click="submitOrders(user)">Submit</button>
 				</div>
-				
                 <div ng-view></div>
             </div>
         </div>

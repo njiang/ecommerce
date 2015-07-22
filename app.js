@@ -174,8 +174,7 @@ app.post('/order', function(req, res) {
 					result.groupedOrders = products;
 					res.contentType('json');
 					res.send(result);
-				})
-				
+				});
 			}
 		});
 	});

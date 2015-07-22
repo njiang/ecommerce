@@ -146,5 +146,20 @@ app.controller("pgController", function($scope, $rootScope, $sce, $http, $window
 		});
 	}
 	
-	
+	$scope.submitOrders = function(user) {
+		if (user && user.products) {
+			var data = {user: user.id};
+			var items = [];
+			user.products.forEach(function(p) {
+				if (p.selected) {
+					var item = {id: p.id, quantity: p.quantity};
+					items.push(item);
+				}
+			});
+			if (items.length > 0) {
+				data.orders = items;
+				$http.post("/order", data);
+			}
+		}
+	};
 });

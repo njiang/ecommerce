@@ -55,13 +55,29 @@
 							title="Enter product or store names" />
 					<button ng-click="searchProducts()" title="click to search">Search</button>
 				</div><br>
+				<table>
+				<th>
 				<h3>Saved Products</h3>
-				<div>
+				</th>
+				<th>
+				<h3>Orders</h3>
+				</th>
+				<tbody>
+				<tr>
+				<td>
 					<div ng-repeat="p in user.products">
 						<p><input type="checkbox" ng-model="p.selected">&nbsp;{{p.item.name}}&nbsp;<input type="text" ng-model="p.quantity"></p>
 					</div>
 					<button ng-click="submitOrders(user)">Submit</button>
-				</div>
+				</td>
+				<td>
+					<div ng-repeat="p in user.openorders">
+						<p>{{p.product.id}}&nbsp;{{p.product.quantity}}</p>
+					</div>
+				</td>
+				</tr>
+				</tbody>
+				</table>
                 <div ng-view></div>
             </div>
         </div>

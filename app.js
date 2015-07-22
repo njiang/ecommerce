@@ -12,6 +12,7 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var uuid = require("uuid");
 
 //var routes = require('./routes/index');
 //var users = require('./routes/users');
@@ -78,12 +79,19 @@ function getProduct(productcollection, user, index, callback) {
 app.get('/user/:id', function(req, res, next) {
 	var usercollection = req.db.collection('usercollection');
 	var productcollection = req.db.collection('productcollection');
+	var ordercollection = req.db.collection('ordercollection');
 	usercollection.findOne({"id": {$eq: req.params.id}}, function(err1, user) {
 		if (!err1) {
 			getProduct(productcollection, user, 0, function(user) {
-				res.contentType('json');
-				res.send(user);
-			})
+				// get all open orders of the user
+				ordercollection.find({$and: [{"userid": {$eq: req.params.id}}, {"status": {$eq: 1}}]}).toArray(function(e,docs) {
+					if (!e) {
+						user.openorders = docs;
+						res.contentType('json');
+						res.send(user);
+					}
+				});
+			});
 		}
 		else {
 			res.contentType('json');
@@ -111,10 +119,17 @@ app.get(/^(.+)$/, function(req, res)
 	res.sendFile(req.params[0]); 
 });
 
-//app.post('/shoppingCart.html', function(req, res) {
-//	console.log('Got cart post');
-//	res.render('cart');
-//});
+app.post('/order', function(req, res) {
+	console.log('Received orders');
+	var ordercollection = req.db.collection('ordercollection');
+	var userid = req.body.user;
+	var orderid = uuid.v1();
+	
+	req.body.orders.forEach(function(order) {
+		ordercollection.insert({userid: userid, orderid: orderid, product: order, status: 1});
+	});
+	res.end("OK");
+});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

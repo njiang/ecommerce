@@ -1,6 +1,6 @@
 // App Module: the name AngularStore matches the ng-app attribute in the main <html> tag
 // the route provides parses the URL and injects the appropriate partial page
-var app = angular.module('pgApp', ['ngRoute']);
+var app = angular.module('pgApp', ['ngRoute', 'ui.bootstrap']);
 app.config(function($routeProvider) {
   $routeProvider.
 	  when('/searchresults',{
@@ -127,12 +127,39 @@ function processUserOrders(orders, products) {
 	return ordertable;
 }
  
+function getPrice(product, count)
+{
+	for (var i = 0; i < product.item.price.length; i++) {
+		
+		if (count >= parseInt(product.item.price[i].from)) {
+			if (product.item.price[i].to.length == 0 || count <= parseInt(product.item.price[i].to))
+				return i;
+		}
+	}
+	return 0; // return the highest price group
+}
+ 
+function processGroupedOrders(groupedorders, products) {
+	for (var key in groupedorders) {
+		var p = findItem(key, "id", products);
+		if (p) {
+			p.item.price.forEach(function(pr) {
+				pr.current = false;
+			});
+			//gourpedorders[key].item = p;
+			p.item.price[getPrice(p, groupedorders[key].count)].current = true;
+			p.currentOrders = groupedorders[key].count;
+		}
+	}
+} 
+ 
 app.controller("pgController", function($scope, $rootScope, $sce, $http, $window, $location, DataService) {
 	$scope.results = null;
 	$scope.userId = "1";
 	$scope.cart = DataService.cart;
 	$scope.user = null;
 	$scope.orders = null;
+	$scope.groupedOrders = null;
 	
 	$scope.loadUserData = function() {
 		var url = "/user/" + $scope.userId;
@@ -145,6 +172,7 @@ app.controller("pgController", function($scope, $rootScope, $sce, $http, $window
 				});
 				
 				$scope.orders = processUserOrders(user.openorders, user.products);
+				$scope.groupedOrders = processGroupedOrders(user.groupedProducts, user.products);
 			}
 		});
 		response.error(function() {

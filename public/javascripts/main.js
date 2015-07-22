@@ -101,22 +101,47 @@ app.directive('myPostRepeatDirective', function() {
       }
     };
 });
+
+function findItem(value, key, list)
+{
+	var result = null;
+	for (var i = 0; i < list.length; i++) {
+		if (list[i][key] == value)
+			return list[i];
+	};
+	return null;
+}
   
 app.controller("pgController", function($scope, $rootScope, $sce, $http, $window, $location, DataService) {
 	$scope.results = null;
 	$scope.userId = "1";
 	$scope.cart = DataService.cart;
 	$scope.user = null;
+	$scope.orders = null;
 	
 	$scope.loadUserData = function() {
 		var url = "/user/" + $scope.userId;
 		var response = $http.get(url);
 		response.success(function(user) {
 			$scope.user = user;
-			if (user && user.products)
+			if (user && user.products) {
 				user.products.forEach(function(p) {
 					p.selected = true;
 				});
+				
+				// HACK HACK we get product info from user.products instead of from DB
+				var ordertable = {};
+				user.openorders.forEach(function(order) {
+					var p = findItem(order.product.id, "id", user.products);
+					if (p != null) 
+						order.item = p.item;
+					if (ordertable[order.orderid] == null) {
+						ordertable[order.orderid] = [];
+					}
+					ordertable[order.orderid].push(order);
+				});
+				$scope.orders = ordertable;
+			}
 		});
 		response.error(function() {
 			

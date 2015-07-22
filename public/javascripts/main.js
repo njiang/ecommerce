@@ -218,6 +218,7 @@ app.controller("pgController", function($scope, $rootScope, $sce, $http, $window
 				var promise = $http.post("/order", data);
 				promise.success(function(data) {
 					$scope.orders = processUserOrders(data.openorders, $scope.user.products);
+					$scope.groupedOrders = processGroupedOrders(data.groupedOrders, $scope.user.products);
 				});
 				promise.error(function() {
 					

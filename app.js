@@ -114,8 +114,7 @@ app.get('/user/:id', function(req, res, next) {
 							user.groupedProducts = products;
 							res.contentType('json');
 							res.send(user);
-						})
-						
+						});
 					}
 				});
 			});
@@ -146,12 +145,11 @@ app.get(/^(.+)$/, function(req, res)
 	res.sendFile(req.params[0]); 
 });
 
-function insertOrders(ordercollection, orders, index, userid, callback)
+function insertOrders(orderid, ordercollection, orders, index, userid, callback)
 {
 	if (index < orders.length) {
-		var orderid = uuid.v1();
 		ordercollection.insert({userid: userid, orderid: orderid, product: orders[index], status: 1});
-		insertOrders(ordercollection, orders, index + 1, userid, callback);
+		insertOrders(orderid, ordercollection, orders, index + 1, userid, callback);
 	}
 	else if (callback)
 		callback();
@@ -163,8 +161,9 @@ app.post('/order', function(req, res) {
 	console.log('Received orders');
 	var ordercollection = req.db.collection('ordercollection');
 	var userid = req.body.user;
+	var orderid = uuid.v1();
 	
-	insertOrders(ordercollection, req.body.orders, 0, userid, function() {
+	insertOrders(orderid, ordercollection, req.body.orders, 0, userid, function() {
 		var result = {};
 		// get all open orders of the user
 		ordercollection.find({$and: [{"userid": {$eq: userid}}, {"status": {$eq: 1}}]}).toArray(function(e,docs) {

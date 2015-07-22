@@ -111,7 +111,22 @@ function findItem(value, key, list)
 	};
 	return null;
 }
-  
+ 
+function processUserOrders(orders, products) {
+	// HACK HACK we get product info from user.products instead of from DB
+	var ordertable = {};
+	orders.forEach(function(order) {
+		var p = findItem(order.product.id, "id", products);
+		if (p != null) 
+			order.item = p.item;
+		if (ordertable[order.orderid] == null) {
+			ordertable[order.orderid] = [];
+		}
+		ordertable[order.orderid].push(order);
+	});
+	return ordertable;
+}
+ 
 app.controller("pgController", function($scope, $rootScope, $sce, $http, $window, $location, DataService) {
 	$scope.results = null;
 	$scope.userId = "1";
@@ -129,18 +144,7 @@ app.controller("pgController", function($scope, $rootScope, $sce, $http, $window
 					p.selected = true;
 				});
 				
-				// HACK HACK we get product info from user.products instead of from DB
-				var ordertable = {};
-				user.openorders.forEach(function(order) {
-					var p = findItem(order.product.id, "id", user.products);
-					if (p != null) 
-						order.item = p.item;
-					if (ordertable[order.orderid] == null) {
-						ordertable[order.orderid] = [];
-					}
-					ordertable[order.orderid].push(order);
-				});
-				$scope.orders = ordertable;
+				$scope.orders = processUserOrders(user.openorders, user.products);
 			}
 		});
 		response.error(function() {
@@ -183,7 +187,13 @@ app.controller("pgController", function($scope, $rootScope, $sce, $http, $window
 			});
 			if (items.length > 0) {
 				data.orders = items;
-				$http.post("/order", data);
+				var promise = $http.post("/order", data);
+				promise.success(function(data) {
+					$scope.orders = processUserOrders(data.openorders, $scope.user.products);
+				});
+				promise.error(function() {
+					
+				});
 			}
 		}
 	};

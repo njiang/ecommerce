@@ -76,6 +76,29 @@ function getProduct(productcollection, user, index, callback) {
 	}
 }
 
+function groupOrders(ordercollection, userOrders, callback)
+{
+	var products = {};
+	userOrders.forEach(function(order) {
+		var prodid = order.product.id;
+		if (products[prodid] == null)
+			products[prodid] = {count: 0};
+	});
+	
+	// HACK HACK we get all the open orders for now, should just get orders for the products
+	ordercollection.find({"status": {$eq: 1}}).toArray(function(err, docs) {
+		if (!err) {
+			docs.forEach(function (order) {
+				if (products[order.product.id]) 
+					products[order.product.id].count += parseInt(order.product.quantity);
+			});
+			if (callback) callback(products);
+		}
+		else if (callback)
+			callback(null);
+	});
+}
+
 app.get('/user/:id', function(req, res, next) {
 	var usercollection = req.db.collection('usercollection');
 	var productcollection = req.db.collection('productcollection');
@@ -87,8 +110,12 @@ app.get('/user/:id', function(req, res, next) {
 				ordercollection.find({$and: [{"userid": {$eq: req.params.id}}, {"status": {$eq: 1}}]}).toArray(function(e,docs) {
 					if (!e) {
 						user.openorders = docs;
-						res.contentType('json');
-						res.send(user);
+						groupOrders(ordercollection, docs, function(products) {
+							user.groupedProducts = products;
+							res.contentType('json');
+							res.send(user);
+						})
+						
 					}
 				});
 			});
@@ -119,16 +146,40 @@ app.get(/^(.+)$/, function(req, res)
 	res.sendFile(req.params[0]); 
 });
 
+function insertOrders(ordercollection, orders, index, userid, callback)
+{
+	if (index < orders.length) {
+		var orderid = uuid.v1();
+		ordercollection.insert({userid: userid, orderid: orderid, product: orders[index], status: 1});
+		insertOrders(ordercollection, orders, index + 1, userid, callback);
+	}
+	else if (callback)
+		callback();
+}
+
+
+
 app.post('/order', function(req, res) {
 	console.log('Received orders');
 	var ordercollection = req.db.collection('ordercollection');
 	var userid = req.body.user;
-	var orderid = uuid.v1();
 	
-	req.body.orders.forEach(function(order) {
-		ordercollection.insert({userid: userid, orderid: orderid, product: order, status: 1});
+	insertOrders(ordercollection, req.body.orders, 0, userid, function() {
+		var result = {};
+		// get all open orders of the user
+		ordercollection.find({$and: [{"userid": {$eq: userid}}, {"status": {$eq: 1}}]}).toArray(function(e,docs) {
+			if (!e) {
+				result.openorders = docs;
+				// Group orders
+				groupOrders(ordercollection, docs, function(products) {
+					result.groupedOrders = products;
+					res.contentType('json');
+					res.send(result);
+				})
+				
+			}
+		});
 	});
-	res.end("OK");
 });
 
 // catch 404 and forward to error handler

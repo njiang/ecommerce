@@ -71,6 +71,7 @@
 				<h3>Grouped Orders</h3>
 				<accordion close-others="oneAtATime">
 					<accordion-group heading="{{product.item.name}}" ng-repeat="product in user.products">
+						<img ng-show="product.item.images" src="/img/{{product.item.images[0]}}" />
 						<p>Current orders: {{product.currentOrders}}</p>
 						<div ng-repeat='p in product.item.price'>
 							<img src="/images/manicule.png" width="25" height="20" ng-show="p.current" /><span>{{p.from}} - {{p.to}}:  ${{p.price}}</span>

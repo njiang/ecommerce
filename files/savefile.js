@@ -21,24 +21,24 @@ db.open(function(err, db) {
   var gridStore = new GridStore(db, fileId, 'w');
 
   // Read the filesize of file on disk (provide your own)
-  var fileSize = fs.statSync('/github/ecommerce/files/soysauce.png').size;
+  var fileSize = fs.statSync('/github/ecommerce/files/chilisauce.jpg').size;
   // Read the buffered data for comparision reasons
-  var data = fs.readFileSync('/github/ecommerce/files/soysauce.png');
+  var data = fs.readFileSync('/github/ecommerce/files/chilisauce.jpg');
 
   // Open the new file
   gridStore.open(function(err, gridStore) {
 
     // Write the file to gridFS
-    gridStore.writeFile('/github/ecommerce/files/soysauce.png', function(err, doc) {
+    gridStore.writeFile('/github/ecommerce/files/chilisauce.jpg', function(err, doc) {
 		db.collection('productcollection', function(err, productcollection) { 
-		  productcollection.findOne({"id": {$eq: "2"}}, function(err, product) {
+		  productcollection.findOne({"id": {$eq: "1"}}, function(err, product) {
 			 if (err)
 				console.log(err);
 			else {
 				if (product.images == null) 
 					product.images = [];
 				product.images.push(fileId);
-				productcollection.update({'id': {$eq: "2"}}, product);
+				productcollection.update({'id': {$eq: "1"}}, product);
 			}
 		  });
 		  // Read back all the written content and verify the correctness

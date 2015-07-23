@@ -57,7 +57,8 @@
 				<br>
 				<h3>Saved Products</h3>
 				<div ng-repeat="p in user.products">
-					<p><input type="checkbox" ng-model="p.selected">&nbsp;{{p.item.name}}&nbsp;<input type="text" ng-model="p.quantity"></p>
+					<p><img ng-show="p.item.images" src="/img/{{p.item.images[0]}}" />
+					<input type="checkbox" ng-model="p.selected">&nbsp;{{p.item.name}}&nbsp;<input type="text" ng-model="p.quantity"></p>
 				</div>
 				<button ng-click="submitOrders(user)">Submit</button><br>
 				<h3>Orders</h3>

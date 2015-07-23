@@ -114,15 +114,14 @@ function findItem(value, key, list)
  
 function processUserOrders(orders, products) {
 	// HACK HACK we get product info from user.products instead of from DB
-	var ordertable = {};
+	var ordertable = [];
 	orders.forEach(function(order) {
-		var p = findItem(order.product.id, "id", products);
-		if (p != null) 
-			order.item = p.item;
-		if (ordertable[order.orderid] == null) {
-			ordertable[order.orderid] = [];
-		}
-		ordertable[order.orderid].push(order);
+		order.products.forEach(function(prod) {
+			var p = findItem(prod.id, "id", products);
+			if (p != null) 
+				prod.item = p.item;
+		});
+		ordertable.push(order);
 	});
 	return ordertable;
 }

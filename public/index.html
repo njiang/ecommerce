@@ -62,9 +62,9 @@
 				</div>
 				<button ng-click="submitOrders(user)">Submit</button><br>
 				<h3>Orders</h3>
-				<div ng-repeat="(key, array) in orders">
+				<div ng-repeat="order in orders">
 					<div class="roundCornered">
-						<div ng-repeat="p in array">
+						<div ng-repeat="p in order.products">
 							<p><b>{{p.item.name}}</b>&nbsp;&nbsp;&nbsp;{{p.product.quantity}}</p>
 						</div>
 					</div>

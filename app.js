@@ -13,6 +13,11 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var uuid = require("uuid");
+var ObjectID = require('mongodb').ObjectID;
+var Binary = require('mongodb').Binary;
+var GridStore = require('mongodb').GridStore;
+var Grid = require('mongodb').Grid;
+var Code = require('mongodb').Code;
 
 //var routes = require('./routes/index');
 //var users = require('./routes/users');
@@ -76,21 +81,30 @@ function getProduct(productcollection, user, index, callback) {
 	}
 }
 
-function groupOrders(ordercollection, userOrders, callback)
+function groupOrders(ordercollection, userProducts, userOrders, callback)
 {
 	var products = {};
-	userOrders.forEach(function(order) {
-		var prodid = order.product.id;
+	userProducts.forEach(function(prod) {
+		var prodid = prod.id;
 		if (products[prodid] == null)
 			products[prodid] = {count: 0};
+	});
+	userOrders.forEach(function(order) {
+		order.products.forEach(function (prod) {
+			var prodid = prod.id;
+			if (products[prodid] == null)
+				products[prodid] = {count: 0};
+		});
 	});
 	
 	// HACK HACK we get all the open orders for now, should just get orders for the products
 	ordercollection.find({"status": {$eq: 1}}).toArray(function(err, docs) {
 		if (!err) {
 			docs.forEach(function (order) {
-				if (products[order.product.id]) 
-					products[order.product.id].count += parseInt(order.product.quantity);
+				order.products.forEach(function(prod) {
+					if (products[prod.id]) 
+						products[prod.id].count += parseInt(prod.quantity);
+				});
 			});
 			if (callback) callback(products);
 		}
@@ -110,7 +124,7 @@ app.get('/user/:id', function(req, res, next) {
 				ordercollection.find({$and: [{"userid": {$eq: req.params.id}}, {"status": {$eq: 1}}]}).toArray(function(e,docs) {
 					if (!e) {
 						user.openorders = docs;
-						groupOrders(ordercollection, docs, function(products) {
+						groupOrders(ordercollection, user.products, docs, function(products) {
 							user.groupedProducts = products;
 							res.contentType('json');
 							res.send(user);
@@ -124,6 +138,17 @@ app.get('/user/:id', function(req, res, next) {
 			res.send(null);
 		}
 	});
+});
+
+app.get('/img/:id', function(req, res, next) {
+	if (req.params.id != null) {
+		var fileId = new ObjectID.createFromHexString(req.params.id);
+		GridStore.read(req.db, fileId, function(err, fileData) {
+			res.send(fileData);
+		});
+	}
+	else
+		res.pipe("null");
 });
 
 app.get('/searchresults', function(req, res, next) {
@@ -163,14 +188,15 @@ app.post('/order', function(req, res) {
 	var userid = req.body.user;
 	var orderid = uuid.v1();
 	
-	insertOrders(orderid, ordercollection, req.body.orders, 0, userid, function() {
+	//insertOrders(orderid, ordercollection, req.body.orders, 0, userid, function() {
+	ordercollection.insert({userid: userid, orderid: orderid, products: req.body.orders, status: 1}, function(err, records) {	
 		var result = {};
 		// get all open orders of the user
 		ordercollection.find({$and: [{"userid": {$eq: userid}}, {"status": {$eq: 1}}]}).toArray(function(e,docs) {
 			if (!e) {
 				result.openorders = docs;
 				// Group orders
-				groupOrders(ordercollection, docs, function(products) {
+				groupOrders(ordercollection, [], docs, function(products) {
 					result.groupedOrders = products;
 					res.contentType('json');
 					res.send(result);
